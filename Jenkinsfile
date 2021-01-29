@@ -6,12 +6,12 @@ node {
       //              -> Hosted Docker Registry is created @ port host.docker.internal:8083
       //              -> Docker IP Address @ 10.11.7.47
       
-      stage ('Docker Login to sync with Nexus Repository') {
-            bat 'docker login -u admin -p Clement 10.11.7.47:8083'
-      }
-   
       stage ('Build Docker Image') {
             bat 'docker build -t docker-csv .' 
+      }
+   
+      stage ('Docker Login to sync with Nexus Repository') {
+            bat 'docker login -u admin -p Clement 10.11.7.47:8083'
       }
       
       stage ('Tag and Push Docker Image') {
