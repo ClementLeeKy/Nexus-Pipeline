@@ -1,25 +1,29 @@
 node {
       checkout scm
       
-      stage ('Create Docker Registry') {
-            bat 'docker run -d -p 5000:5000 --restart=always --name registry registry:2'
-      }
+      //Pre-Condition -> Nexus Platform is hosted @ host.docker.internal:8081
+      //              -> Signed into admin account, Username -> admin, Password -> Clement
+      //              -> Hosted Docker Registry is created @ port host.docker.internal:8083
       
+      stage ('Docker Login to sync with Nexus Repository') {
+            bat 'docker login -u admin -p Clement host.docker.internal:8083'
+      }
+   
       stage ('Build Docker Image') {
-            def image = docker.build("docker-csv", '.') 
+            bat 'docker build -t docker-csv .' 
       }
       
       stage ('Tag and Push Docker Image') {
-            bat 'docker tag docker-csv localhost:5000/docker-csv'
-            bat 'docker push localhost:5000/docker-csv'
+            bat 'docker tag docker-csv host.docker.internal:8083/docker-csv'
+            bat 'docker push host.docker.internal:8083/docker-csv'
       }
       
       stage ('Pull Docker Image from Local Registry') {
-            bat 'docker pull localhost:5000/docker-csv'
+            bat 'docker pull host.docker.internal:8083/docker-csv'
       }
      
       stage ('Insert Source Code as Volume into Container') {
-            bat 'docker run --name source-container -d -v /c/Users/z0048yrk/Desktop/Source-Code:/root localhost:5000/docker-csv tail -f /dev/null'
+            bat 'docker run --name source-container -d -v /c/Users/z0048yrk/Desktop/Source-Code:/root host.docker.internal:8083/docker-csv tail -f /dev/null'
             bat 'docker exec --interactive source-container bash -c "cd root && python test.py > output.csv"'   //output.csv file resides in Source-Code directory
        }
       
